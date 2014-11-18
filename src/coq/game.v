@@ -1,4 +1,5 @@
 Require Import List.
+Require Import Bool.
 Import ListNotations.
 Require Import types.
 
@@ -63,113 +64,45 @@ Definition convert (o: outcome) :=
     | Owins => O
     | _ => B
   end.
-Definition evaluate_board (brd: board): outcome :=
-  match brd with
-   | mk_board 
-               X X X
-               _ _ _
-               _ _ _ => Xwins
-   | mk_board 
-               _ _ _
-               X X X
-               _ _ _ => Xwins
-   | mk_board 
-               _ _ _
-               _ _ _
-               X X X => Xwins
-   | mk_board 
-               X _ _
-               X _ _
-               X _ _ => Xwins
-   | mk_board 
-               _ X _
-               _ X _
-               _ X _ => Xwins
-   | mk_board 
-               _ _ X
-               _ _ X
-               _ _ X => Xwins
-   | mk_board 
-               X _ _
-               _ X _
-               _ _ X => Xwins
-   | mk_board 
-               _ _ X
-               _ X _
-               X _ _ => Xwins
-   | mk_board 
-              O O O
-               _ _ _
-               _ _ _ => Owins
-   | mk_board 
-               _ _ _
-               O O O
-               _ _ _ => Owins
-   | mk_board 
-               _ _ _
-               _ _ _
-               O O O => Owins
-   | mk_board 
-               O _ _
-               O _ _
-               O _ _ => Owins
-   | mk_board 
-               _ O _
-               _ O _
-               _ O _ => Owins
-   | mk_board 
-               _ _ O
-               _ _ O
-               _ _ O => Owins
-   | mk_board 
-               O _ _
-               _ O _
-               _ _ O => Owins
-   | mk_board 
-               _ _ O
-               _ O _
-               O _ _ => Owins
-   | mk_board 
-               B _ _
-               _ _ _
-               _ _ _ => incomplete
-   | mk_board 
-               _ B _
-               _ _ _
-               _ _ _ => incomplete
-   | mk_board 
-               _ _ B
-               _ _ _
-               _ _ _ => incomplete
-   | mk_board 
-               _ _ _
-               B _ _
-               _ _ _ => incomplete
-   | mk_board 
-               _ _ _
-               _ B _
-               _ _ _ => incomplete
-   | mk_board 
-               _ _ _
-               _ _ B
-               _ _ _ => incomplete
-   | mk_board 
-               _ _ _
-               _ _ _
-               B _ _ => incomplete
-   | mk_board 
-               _ _ _
-               _ _ _
-               _ B _ => incomplete
-   | mk_board 
-               _ _ _
-               _ _ _
-               _ _ B => incomplete             
-   | mk_board 
-               _ _ _
-               _ _ _
-               _ _ _ => tie
+
+
+
+Fixpoint in_list {A: Type} (x: A) (l: list A) (equality: A -> A -> bool) : bool :=
+  match l with
+    | nil => false
+    | h :: t => equality h x
   end.
+
+Definition match_marks (l: list mark): bool :=
+  match l with
+    | [X; X; X] => true
+    | [O; O; O] => true
+    | _ => false
+  end.
+
+Definition match_mark (brd: board) (mk: mark) : bool :=
+  match brd with
+    | mk_board m1 m2 m3
+                       m4 m5 m6
+                       m7 m8 m9 => in_list true (map (match_marks) 
+                            [[m1; m2; m3]; [m4;m5;m6]; [m7;m8;m9];
+                             [m1; m4; m7]; [m2;m5;m8]; [m3;m6;m9];
+                             [m1; m2; m3]; [m4;m5;m6]]) eqb
+  
+  end.
+  
+Definition has_blanks (brd: board): bool :=
+  match brd with
+    | mk_board m1 m2 m3
+                       m4 m5 m6
+                        m7 m8 m9 => in_list B [m1;m2;m3;m4;m5;m6;m7;m8;m9] mark_eq
+  end.
+
+Definition evaluate_board (brd: board): outcome :=
+  if (match_mark brd X) then Xwins
+  else if (match_mark brd O) then Owins
+  else if (has_blanks brd) then incomplete
+  else tie.
 
 
 Definition evaluate_boards (l : list board) :=
@@ -254,5 +187,6 @@ Fixpoint doPlayGame (b: macro_board) (l: list move) (last_move: move): outcome :
 
 Definition playGame (l: list move): outcome :=
   doPlayGame empty_macro_board l first_move.
-
-
+  
+Extraction Language Haskell.
+Recursive Extraction playGame.
