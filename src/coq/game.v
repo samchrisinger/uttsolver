@@ -66,7 +66,6 @@ Definition convert (o: outcome) :=
   end.
 
 
-
 Fixpoint in_list {A: Type} (x: A) (l: list A) (equality: A -> A -> bool) : bool :=
   match l with
     | nil => false
@@ -83,19 +82,19 @@ Definition match_marks (l: list mark): bool :=
 Definition match_mark (brd: board) (mk: mark) : bool :=
   match brd with
     | mk_board m1 m2 m3
-                       m4 m5 m6
-                       m7 m8 m9 => in_list true (map (match_marks) 
-                            [[m1; m2; m3]; [m4;m5;m6]; [m7;m8;m9];
-                             [m1; m4; m7]; [m2;m5;m8]; [m3;m6;m9];
-                             [m1; m2; m3]; [m4;m5;m6]]) eqb
+               m4 m5 m6
+               m7 m8 m9 => in_list true (map (match_marks) 
+                                             [[m1; m2; m3]; [m4;m5;m6]; [m7;m8;m9];
+                                              [m1; m4; m7]; [m2;m5;m8]; [m3;m6;m9];
+                                              [m1; m2; m3]; [m4;m5;m6]]) eqb
   
   end.
   
 Definition has_blanks (brd: board): bool :=
   match brd with
     | mk_board m1 m2 m3
-                       m4 m5 m6
-                        m7 m8 m9 => in_list B [m1;m2;m3;m4;m5;m6;m7;m8;m9] mark_eq
+               m4 m5 m6
+               m7 m8 m9 => in_list B [m1;m2;m3;m4;m5;m6;m7;m8;m9] mark_eq
   end.
 
 Definition evaluate_board (brd: board): outcome :=
@@ -118,8 +117,10 @@ Definition evaluate_macro_board (b: macro_board) :=
 
 Definition get_board (b: macro_board) (c: cell) := 
   match b with
-    | mk_macro_board b00 b01 b02 b10 b11 b12 b20 b21 b22 =>
-     match c with
+    | mk_macro_board b00 b01 b02 
+                     b10 b11 b12 
+                     b20 b21 b22 =>
+      match c with
         | C00 => b00
         | C01 => b01
         | C02 => b02
@@ -151,7 +152,10 @@ Definition update_macro_board (b: macro_board) (c: cell) (brd: board) :=
 
 Definition mark_macro_board (b: macro_board) (mv: move) := 
   match mv with
-    | mk_move c1 c2 mk => update_macro_board b c1 (mark_board (get_board b c1) mk c2)
+    | mk_move c1 c2 mk => (update_macro_board b c1 
+                                              (mark_board 
+                                                 (get_board b c1) 
+                                                 mk c2))
     | first_move => b
   end.
 
