@@ -194,3 +194,25 @@ Definition playGame (l: list move): outcome :=
   
 Extraction Language Haskell.
 Recursive Extraction playGame.
+
+Definition naive_player_small_board (brd: board) (mk: mark): cell :=
+  match brd with
+    | mk_board B _ _ _ _ _ _ _ _ => C00
+    | mk_board _ B _ _ _ _ _ _ _ => C01
+    | mk_board _ _ B _ _ _ _ _ _ => C02
+    | mk_board _ _ _ B _ _ _ _ _ => C10
+    | mk_board _ _ _ _ B _ _ _ _ => C11
+    | mk_board _ _ _ _ _ B _ _ _ => C12
+    | mk_board _ _ _ _ _ _ B _ _ => C20
+    | mk_board _ _ _ _ _ _ _ B _ => C21
+    | mk_board _ _ _ _ _ _ _ _ B => C22
+    | _ => C00
+  end.
+
+Definition naive_player (brd: macro_board) (c: cell) (mk: mark): move :=
+  let small_brd := (get_board brd c) in
+  match evaluate_board (small_brd) with
+    | malformed => first_move
+    | incomplete => mk_move c (naive_player_small_board small_brd mk) mk
+    | tie | Xwins | Owins => first_move
+  end.
