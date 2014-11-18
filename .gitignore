@@ -1,3 +1,5 @@
 cabal.sandbox.config
 *~
 \#*
+*.vo
+*.glob
