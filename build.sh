@@ -1,3 +1,5 @@
+#!/bin/bash
+
 rm ./src/coq/*.vo
 
 cd ./src/coq
