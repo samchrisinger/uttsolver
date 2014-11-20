@@ -86,3 +86,7 @@ Inductive outcome: Set :=
   | incomplete
   | tie
   | malformed.
+  
+  
+Inductive game: Set :=
+  | mk_game: list move -> nat -> macro_board -> outcome -> game.

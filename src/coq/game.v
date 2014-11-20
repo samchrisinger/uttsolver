@@ -66,10 +66,11 @@ Definition convert (o: outcome) :=
   end.
 
 
+
 Fixpoint in_list {A: Type} (x: A) (l: list A) (equality: A -> A -> bool) : bool :=
   match l with
     | nil => false
-    | h :: t => equality h x
+    | h :: t => if equality h x then true else in_list x t equality
   end.
 
 Definition match_marks (l: list mark): bool :=
@@ -82,19 +83,19 @@ Definition match_marks (l: list mark): bool :=
 Definition match_mark (brd: board) (mk: mark) : bool :=
   match brd with
     | mk_board m1 m2 m3
-               m4 m5 m6
-               m7 m8 m9 => in_list true (map (match_marks) 
-                                             [[m1; m2; m3]; [m4;m5;m6]; [m7;m8;m9];
-                                              [m1; m4; m7]; [m2;m5;m8]; [m3;m6;m9];
-                                              [m1; m2; m3]; [m4;m5;m6]]) eqb
+                       m4 m5 m6
+                       m7 m8 m9 => in_list true (map (match_marks) 
+                            [[m1; m2; m3]; [m4;m5;m6]; [m7;m8;m9];
+                             [m1; m4; m7]; [m2;m5;m8]; [m3;m6;m9];
+                             [m1; m2; m3]; [m4;m5;m6]]) eqb
   
   end.
   
 Definition has_blanks (brd: board): bool :=
   match brd with
     | mk_board m1 m2 m3
-               m4 m5 m6
-               m7 m8 m9 => in_list B [m1;m2;m3;m4;m5;m6;m7;m8;m9] mark_eq
+                       m4 m5 m6
+                        m7 m8 m9 => in_list B [m1;m2;m3;m4;m5;m6;m7;m8;m9] mark_eq
   end.
 
 Definition evaluate_board (brd: board): outcome :=
@@ -117,10 +118,8 @@ Definition evaluate_macro_board (b: macro_board) :=
 
 Definition get_board (b: macro_board) (c: cell) := 
   match b with
-    | mk_macro_board b00 b01 b02 
-                     b10 b11 b12 
-                     b20 b21 b22 =>
-      match c with
+    | mk_macro_board b00 b01 b02 b10 b11 b12 b20 b21 b22 =>
+     match c with
         | C00 => b00
         | C01 => b01
         | C02 => b02
@@ -150,16 +149,17 @@ Definition update_macro_board (b: macro_board) (c: cell) (brd: board) :=
     end.
 
 
-Definition mark_macro_board (b: macro_board) (mv: move) := 
+Definition mark_macro_board (b: macro_board) (mv: move): macro_board := 
   match mv with
-    | mk_move c1 c2 mk => (update_macro_board b c1 
-                                              (mark_board 
-                                                 (get_board b c1) 
-                                                 mk c2))
+    | mk_move c1 c2 mk => update_macro_board b c1 (mark_board (get_board b c1) mk c2)
     | first_move => b
   end.
 
-Definition valid (b: board) (mv: move) := true.
+Definition valid (b: board) (c: cell) (mk: mark) := 
+  match evaluate_board (mark_board b mk c) with
+    | malformed => false
+    | _ => true
+  end.
 
 Definition macro_valid (b: macro_board) (mv: move) (last_move: move) :=
   match mv, last_move with
@@ -171,7 +171,7 @@ Definition macro_valid (b: macro_board) (mv: move) (last_move: move) :=
                 | incomplete => true
                 | _ => false
               end)
-                then false else valid (get_board b c1) mv
+                then false else valid (get_board b c1) c2 mk
        | _ => false
      end
    | _, first_move => true
@@ -208,11 +208,65 @@ Definition naive_player_small_board (brd: board) (mk: mark): cell :=
     | mk_board _ _ _ _ _ _ _ _ B => C22
     | _ => C00
   end.
+ 
+Fixpoint do_naive_player_free_move (brds: list board) (outcomes: list outcome) (cells: list cell) (mk: mark): move := 
+  match brds, outcomes, cells with
+    | b::t1, o::t2, c::t3 => 
+      match o with
+        | incomplete => mk_move (c) (naive_player_small_board b mk) mk
+        | _ => do_naive_player_free_move t1 t2 t3 mk
+      end
+    | _, _,_ => first_move
+  end.
 
-Definition naive_player (brd: macro_board) (c: cell) (mk: mark): move :=
+Definition naive_player_free_move (brd: macro_board) (mk: mark): move :=
+  match brd with
+    | mk_macro_board brd00 brd01 brd02 brd10 brd11 brd12 brd20 brd21 brd22 => 
+      let brds := ([brd00;brd01;brd02;brd10;brd11;brd12;brd20;brd21;brd22]) in
+        do_naive_player_free_move brds (evaluate_boards brds) [C00;C01;C02;C10;C11;C12;C20;C21;C22] mk
+  end.
+
+Definition naive_player (brd: macro_board) (last_mv: move): move :=
+  let c := match last_mv with
+                | first_move => C11
+                | mk_move _ c2 _ => c2
+  end in
+  let mk := match last_mv with
+                   | first_move => X
+                   | mk_move _ _ mk => 
+                 match mk with
+                   | X => O
+                   | O => X
+                   | _ => B
+                 end
+  end in
   let small_brd := (get_board brd c) in
   match evaluate_board (small_brd) with
     | malformed => first_move
     | incomplete => mk_move c (naive_player_small_board small_brd mk) mk
-    | tie | Xwins | Owins => first_move
+    | tie | Xwins | Owins => naive_player_free_move brd mk
   end.
+  
+Fixpoint doPlayGameWithPlayers (player: macro_board -> move -> move) 
+                                                       (brd: macro_board) (last_mv: move) (turn: nat) (l: list move): game :=
+  match turn with
+    | 0 => mk_game l turn brd (evaluate_macro_board brd)
+    | S n' => 
+    let mv := player brd last_mv in
+    if negb (macro_valid brd mv last_mv) then mk_game (mv::l) n' brd malformed else (* hitting this branch *)
+    let b2 := mark_macro_board brd mv in
+    match (evaluate_macro_board b2) with
+      | incomplete => doPlayGameWithPlayers player b2 mv n'  (mv :: l)
+      | a => mk_game (mv::l) turn b2 a
+    end
+  end.
+
+Definition playGameWithPlayers (player : macro_board -> move -> move): game :=
+  doPlayGameWithPlayers player empty_macro_board first_move 81 [].
+  
+Compute playGameWithPlayers naive_player.
+
+Extraction Language Haskell.
+Recursive Extraction playGameWithPlayers.
+
+(* Temporal logic *)
