@@ -73,10 +73,16 @@ Fixpoint in_list {A: Type} (x: A) (l: list A) (equality: A -> A -> bool) : bool 
     | h :: t => if equality h x then true else in_list x t equality
   end.
 
-Definition match_marks (l: list mark): bool :=
+Definition do_match_mark (mk: mark) (l: list mark): bool :=
   match l with
-    | [X; X; X] => true
-    | [O; O; O] => true
+    | [X; X; X] => match mk with
+                            | X => true
+                            | _ => false
+                          end
+    | [O; O; O] => match mk with
+                            | O => true
+                            | _ => false
+                          end
     | _ => false
   end.
 
@@ -84,13 +90,13 @@ Definition match_mark (brd: board) (mk: mark) : bool :=
   match brd with
     | mk_board m1 m2 m3
                        m4 m5 m6
-                       m7 m8 m9 => in_list true (map (match_marks) 
+                       m7 m8 m9 => in_list true (map (do_match_mark mk) 
                             [[m1; m2; m3]; [m4;m5;m6]; [m7;m8;m9];
                              [m1; m4; m7]; [m2;m5;m8]; [m3;m6;m9];
-                             [m1; m2; m3]; [m4;m5;m6]]) eqb
+                             [m1; m5; m9]; [m3;m5;m7]]) eqb
   
   end.
-  
+
 Definition has_blanks (brd: board): bool :=
   match brd with
     | mk_board m1 m2 m3
@@ -166,12 +172,12 @@ Definition macro_valid (b: macro_board) (mv: move) (last_move: move) :=
     | mk_move c1 c2 mk, mk_move c1' c2' mk' =>
       match evaluate_board (get_board b c1) with
         | incomplete => 
-            if negb (orb  (cell_equal c1 c2')
+            if (orb  (cell_equal c1 c2')
               match (evaluate_board (get_board b c2' )) with
-                | incomplete => true
-                | _ => false
+                | incomplete => false
+                | _ => true
               end)
-                then false else valid (get_board b c1) c2 mk
+                then valid (get_board b c1) c2 mk else false
        | _ => false
      end
    | _, first_move => true
@@ -191,9 +197,6 @@ Fixpoint doPlayGame (b: macro_board) (l: list move) (last_move: move): outcome :
 
 Definition playGame (l: list move): outcome :=
   doPlayGame empty_macro_board l first_move.
-  
-Extraction Language Haskell.
-Recursive Extraction playGame.
 
 Definition naive_player_small_board (brd: board) (mk: mark): cell :=
   match brd with
@@ -263,10 +266,8 @@ Fixpoint doPlayGameWithPlayers (player: macro_board -> move -> move)
 
 Definition playGameWithPlayers (player : macro_board -> move -> move): game :=
   doPlayGameWithPlayers player empty_macro_board first_move 81 [].
-  
+
 Compute playGameWithPlayers naive_player.
 
-Extraction Language Haskell.
-Recursive Extraction playGameWithPlayers.
 
 (* Temporal logic *)
