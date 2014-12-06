@@ -90,3 +90,8 @@ Inductive outcome: Set :=
   
 Inductive game: Set :=
   | mk_game: list move -> nat -> macro_board -> outcome -> game.
+  
+Definition extractOutcome (g: game): outcome :=
+  match g with
+    | mk_game _ _ _ o => o
+  end.
