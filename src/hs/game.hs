@@ -18,6 +18,10 @@ negb b =
    True -> False;
    False -> True}
 
+data Nat =
+   O
+ | S Nat
+
 data List a =
    Nil
  | Cons a (List a)
@@ -40,7 +44,7 @@ map f l =
 data Mark =
    B
  | X
- | O
+ | O0
 
 mark_eq :: Mark -> Mark -> Bool
 mark_eq m1 m2 =
@@ -53,9 +57,9 @@ mark_eq m1 m2 =
     case m2 of {
      X -> True;
      _ -> False};
-   O ->
+   O0 ->
     case m2 of {
-     O -> True;
+     O0 -> True;
      _ -> False}}
 
 data Board =
@@ -187,17 +191,20 @@ convert :: Outcome -> Mark
 convert o =
   case o of {
    Xwins -> X;
-   Owins -> O;
+   Owins -> O0;
    _ -> B}
 
 in_list :: a1 -> (List a1) -> (a1 -> a1 -> Bool) -> Bool
 in_list x l equality =
   case l of {
    Nil -> False;
-   Cons h t -> equality h x}
+   Cons h t ->
+    case equality h x of {
+     True -> True;
+     False -> in_list x t equality}}
 
-match_marks :: (List Mark) -> Bool
-match_marks l =
+do_match_mark :: Mark -> (List Mark) -> Bool
+do_match_mark mk l =
   case l of {
    Nil -> False;
    Cons m l0 ->
@@ -215,23 +222,29 @@ match_marks l =
             case m1 of {
              X ->
               case l2 of {
-               Nil -> True;
+               Nil ->
+                case mk of {
+                 X -> True;
+                 _ -> False};
                Cons m2 l3 -> False};
              _ -> False}};
          _ -> False}};
-     O ->
+     O0 ->
       case l0 of {
        Nil -> False;
        Cons m0 l1 ->
         case m0 of {
-         O ->
+         O0 ->
           case l1 of {
            Nil -> False;
            Cons m1 l2 ->
             case m1 of {
-             O ->
+             O0 ->
               case l2 of {
-               Nil -> True;
+               Nil ->
+                case mk of {
+                 O0 -> True;
+                 _ -> False};
                Cons m2 l3 -> False};
              _ -> False}};
          _ -> False}}}}
@@ -241,12 +254,12 @@ match_mark brd mk =
   case brd of {
    Mk_board m1 m2 m3 m4 m5 m6 m7 m8 m9 ->
     in_list True
-      (map match_marks (Cons (Cons m1 (Cons m2 (Cons m3 Nil))) (Cons (Cons m4
-        (Cons m5 (Cons m6 Nil))) (Cons (Cons m7 (Cons m8 (Cons m9 Nil)))
-        (Cons (Cons m1 (Cons m4 (Cons m7 Nil))) (Cons (Cons m2 (Cons m5 (Cons
-        m8 Nil))) (Cons (Cons m3 (Cons m6 (Cons m9 Nil))) (Cons (Cons m1
-        (Cons m2 (Cons m3 Nil))) (Cons (Cons m4 (Cons m5 (Cons m6 Nil)))
-        Nil))))))))) eqb}
+      (map (do_match_mark mk) (Cons (Cons m1 (Cons m2 (Cons m3 Nil))) (Cons
+        (Cons m4 (Cons m5 (Cons m6 Nil))) (Cons (Cons m7 (Cons m8 (Cons m9
+        Nil))) (Cons (Cons m1 (Cons m4 (Cons m7 Nil))) (Cons (Cons m2 (Cons
+        m5 (Cons m8 Nil))) (Cons (Cons m3 (Cons m6 (Cons m9 Nil))) (Cons
+        (Cons m1 (Cons m5 (Cons m9 Nil))) (Cons (Cons m3 (Cons m5 (Cons m7
+        Nil))) Nil))))))))) eqb}
 
 has_blanks :: Board -> Bool
 has_blanks brd =
@@ -260,7 +273,7 @@ evaluate_board brd =
   case match_mark brd X of {
    True -> Xwins;
    False ->
-    case match_mark brd O of {
+    case match_mark brd O0 of {
      True -> Owins;
      False ->
       case has_blanks brd of {
@@ -318,9 +331,11 @@ mark_macro_board b mv =
     update_macro_board b c1 (mark_board (get_board b c1) mk c2);
    First_move -> b}
 
-valid :: Board -> Move -> Bool
-valid b mv =
-  True
+valid :: Board -> Cell -> Mark -> Bool
+valid b c mk =
+  case evaluate_board (mark_board b mk c) of {
+   Malformed -> False;
+   _ -> True}
 
 macro_valid :: Macro_board -> Move -> Move -> Bool
 macro_valid b mv last_move =
@@ -330,13 +345,12 @@ macro_valid b mv last_move =
      Mk_move c1' c2' mk' ->
       case evaluate_board (get_board b c1) of {
        Incomplete ->
-        case negb
-               (orb (cell_equal c1 c2')
-                 (case evaluate_board (get_board b c2') of {
-                   Incomplete -> True;
-                   _ -> False})) of {
-         True -> False;
-         False -> valid (get_board b c1) mv};
+        case orb (cell_equal c1 c2')
+               (case evaluate_board (get_board b c2') of {
+                 Incomplete -> False;
+                 _ -> True}) of {
+         True -> valid (get_board b c1) c2 mk;
+         False -> False};
        _ -> False};
      First_move -> True};
    First_move ->
@@ -344,20 +358,28 @@ macro_valid b mv last_move =
      Mk_move c c0 m -> False;
      First_move -> True}}
 
-doPlayGame :: Macro_board -> (List Move) -> Move -> Outcome
-doPlayGame b l last_move =
-  case l of {
-   Nil -> evaluate_macro_board b;
-   Cons h t ->
-    case negb (macro_valid b h last_move) of {
+doPlayGameWithPlayers :: (Macro_board -> Move -> Move) -> Macro_board -> Move
+                         -> Nat -> (List Move) -> Outcome
+doPlayGameWithPlayers player brd last_mv turn l =
+  case turn of {
+   O -> evaluate_macro_board brd;
+   S n' ->
+    let {mv = player brd last_mv} in
+    case negb (macro_valid brd mv last_mv) of {
      True -> Malformed;
      False ->
-      let {b2 = mark_macro_board b h} in
+      let {b2 = mark_macro_board brd mv} in
       case evaluate_macro_board b2 of {
-       Incomplete -> doPlayGame b2 t h;
+       Incomplete -> doPlayGameWithPlayers player b2 mv n' (Cons mv l);
        x -> x}}}
 
-playGame :: (List Move) -> Outcome
-playGame l =
-  doPlayGame empty_macro_board l First_move
+playGameWithPlayers :: (Macro_board -> Move -> Move) -> Outcome
+playGameWithPlayers player =
+  doPlayGameWithPlayers player empty_macro_board First_move (S (S (S (S (S (S
+    (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S
+    (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S
+    (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S
+    (S (S (S
+    O)))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))
+    Nil
 
