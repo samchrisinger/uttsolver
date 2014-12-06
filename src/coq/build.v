@@ -1,2 +1,3 @@
 Require Import game.
-Extraction "game.hs" playGame.
+Extraction Language Haskell.
+Extraction "game.hs" playGameWithPlayers.
