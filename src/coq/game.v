@@ -256,46 +256,44 @@ Definition naive_player (brd: macro_board) (last_mv: move): move :=
     | incomplete => mk_move c (naive_player_small_board small_brd mk) mk
     | tie | Xwins | Owins => naive_player_free_move brd mk
   end.
-  
-Fixpoint doPlayGameWithPlayers (player: macro_board -> move -> move) 
+
+Fixpoint doPlayGameWithPlayers (cur_player next_player: macro_board -> move -> move) 
                                                        (brd: macro_board) (last_mv: move) (turn: nat) (l: list move): outcome :=
   match turn with
     | 0 =>  (evaluate_macro_board brd)
     | S n' => 
-    let mv := player brd last_mv in
+    let mv := cur_player brd last_mv in
     if negb (macro_valid brd mv last_mv) then malformed else
     let b2 := mark_macro_board brd mv in
     match (evaluate_macro_board b2) with
-      | incomplete => doPlayGameWithPlayers player b2 mv n'  (mv :: l)
+      | incomplete => (doPlayGameWithPlayers (next_player) (cur_player) b2 mv n' (mv :: l))
       | a => a
     end
   end.
 
-Definition playGameWithPlayers (player : macro_board -> move -> move): outcome :=
-  doPlayGameWithPlayers player empty_macro_board first_move 81 [].
+Definition playGameWithPlayers (cur_player next_player : macro_board -> move -> move): outcome :=
+  doPlayGameWithPlayers cur_player next_player empty_macro_board first_move 81 [].
   
-Compute playGameWithPlayers naive_player.
-
-
+Compute playGameWithPlayers naive_player naive_player.
 
 
 (* This is good for debugging, but makes proofs trickier *)
-Fixpoint DEBUG_doPlayGameWithPlayers (player: macro_board -> move -> move) 
+Fixpoint DEBUG_doPlayGameWithPlayers (cur_player next_player: macro_board -> move -> move) 
                                                        (brd: macro_board) (last_mv: move) (turn: nat) (l: list move): game :=
   match turn with
     | 0 => mk_game l turn brd (evaluate_macro_board brd)
     | S n' => 
-    let mv := player brd last_mv in
+    let mv := cur_player brd last_mv in
     if negb (macro_valid brd mv last_mv) then mk_game (mv::l) n' brd malformed else
     let b2 := mark_macro_board brd mv in
     match (evaluate_macro_board b2) with
-      | incomplete => doPlayGameWithPlayers player b2 mv n'  (mv :: l)
+      | incomplete => DEBUG_doPlayGameWithPlayers next_player cur_player b2 mv n'  (mv :: l)
       | a => mk_game (mv::l) turn b2 a
     end
   end.
 
-Definition DEBUG_playGameWithPlayers (player : macro_board -> move -> move): game :=
-  doPlayGameWithPlayers player empty_macro_board first_move 81 [].
+Definition DEBUG_playGameWithPlayers (player1 player2 : macro_board -> move -> move): game :=
+  DEBUG_doPlayGameWithPlayers player1 player2 empty_macro_board first_move 81 [].
 
 
 
