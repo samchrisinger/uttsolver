@@ -187,8 +187,8 @@ mark_board brd mv c =
      C21 -> Mk_board e0 e1 e2 e3 e4 e5 e6 mv e8;
      C22 -> Mk_board e0 e1 e2 e3 e4 e5 e6 e7 mv}}
 
-convert :: Outcome -> Mark
-convert o =
+convert_outcome_to_mark :: Outcome -> Mark
+convert_outcome_to_mark o =
   case o of {
    Xwins -> X;
    Owins -> O0;
@@ -290,7 +290,7 @@ evaluate_macro_board b =
    Mk_macro_board b00 b01 b02 b10 b11 b12 b20 b21 b22 ->
     evaluate_board
       (lift_list_to_board
-        (map convert
+        (map convert_outcome_to_mark
           (evaluate_boards (Cons b00 (Cons b01 (Cons b02 (Cons b10 (Cons b11
             (Cons b12 (Cons b20 (Cons b21 (Cons b22 Nil))))))))))))}
 
@@ -325,14 +325,14 @@ update_macro_board b c brd =
      C22 -> Mk_macro_board b00 b01 b02 b10 b11 b12 b20 b21 brd}}
 
 mark_macro_board :: Macro_board -> Move -> Macro_board
-mark_macro_board b mv =
+mark_macro_board brd mv =
   case mv of {
    Mk_move c1 c2 mk ->
-    update_macro_board b c1 (mark_board (get_board b c1) mk c2);
-   First_move -> b}
+    update_macro_board brd c1 (mark_board (get_board brd c1) mk c2);
+   First_move -> brd}
 
-valid :: Board -> Cell -> Mark -> Bool
-valid b c mk =
+valid_board :: Board -> Cell -> Mark -> Bool
+valid_board b c mk =
   case evaluate_board (mark_board b mk c) of {
    Malformed -> False;
    _ -> True}
@@ -349,7 +349,7 @@ macro_valid b mv last_move =
                (case evaluate_board (get_board b c2') of {
                  Incomplete -> False;
                  _ -> True}) of {
-         True -> valid (get_board b c1) c2 mk;
+         True -> valid_board (get_board b c1) c2 mk;
          False -> False};
        _ -> False};
      First_move -> True};

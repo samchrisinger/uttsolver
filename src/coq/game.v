@@ -224,6 +224,8 @@ Load "./players/players".
   
 Compute playGameWithPlayers naive_player.
 
+Compute playGameWithPlayers intelligent_player.
+
 (* This is good for debugging, but makes proofs trickier *)
 Fixpoint DEBUG_doPlayGameWithPlayers 
          (player: macro_board -> move -> move) 

@@ -7,6 +7,13 @@ Inductive mark: Set:=
   | X: mark
   | O: mark.
 
+Definition other_mark(mk: mark): mark:= 
+  match mk with
+      | X => O
+      | O => X
+      | B => B
+  end.
+
 Definition mark_eq(m1 m2: mark): bool:= 
   match m1, m2 with
       | B, B => true
@@ -79,14 +86,18 @@ Definition empty_macro_board: macro_board:=
 Inductive move: Set :=
   | mk_move: cell -> cell -> mark -> move
   | first_move.
-  
+
 Inductive outcome: Set :=
   | Xwins
   | Owins
   | incomplete
   | tie
   | malformed.
-  
-  
+    
 Inductive game: Set :=
   | mk_game: list move -> nat -> macro_board -> outcome -> game.
+
+Inductive polyboard: Set:=
+  | macro: macro_board -> polyboard
+  | micro: board -> polyboard.
+      
