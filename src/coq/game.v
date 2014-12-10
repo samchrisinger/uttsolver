@@ -223,7 +223,6 @@ Definition playGameWithPlayers (player : macro_board -> move -> move): outcome :
 Load "./players/players".
   
 Compute playGameWithPlayers naive_player.
-
 Compute playGameWithPlayers intelligent_player.
 
 (* This is good for debugging, but makes proofs trickier *)
@@ -248,4 +247,5 @@ Fixpoint DEBUG_doPlayGameWithPlayers
 Definition DEBUG_playGameWithPlayers (player : macro_board -> move -> move): game :=
   DEBUG_doPlayGameWithPlayers player empty_macro_board first_move 81 [].
 
+Compute DEBUG_playGameWithPlayers intelligent_player.
 (* Temporal logic *)
