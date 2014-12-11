@@ -31,7 +31,7 @@ Definition naive_player_free_move (brd: macro_board) (mk: mark): move :=
       let brds := ([brd00; brd01; brd02;
                     brd10; brd11; brd12;
                     brd20; brd21; brd22]) in
-        do_naive_player_free_move brds (evaluate_boards brds) [C00;C01;C02;C10;C11;C12;C20;C21;C22] mk
+      do_naive_player_free_move brds (evaluate_boards brds) [C00;C01;C02;C10;C11;C12;C20;C21;C22] mk
   end.
 
 Definition naive_player (brd: macro_board) (last_mv: move): move :=

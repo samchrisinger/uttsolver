@@ -1,10 +1,10 @@
 (* COMMENT OUT after debugging *)
-
+(*
 Require Import "../types".
 Require Import "../game".
 Require Import List.
 Import ListNotations.
-
+*)
 Fixpoint flatten {X: Type} (l: list (list X)): list X:=
   match l with
       | nil => []
@@ -100,16 +100,15 @@ Fixpoint intelligent_player_mk_branch (brd: macro_board)(depth: nat)(m: move): n
             | nil => leaf (evaluate_macro_board new_brd)
             | _ => match depth with
                        | 0 => leaf (evaluate_macro_board new_brd)
-                       | 78 => leaf (evaluate_macro_board new_brd)
                        | S n' => mk_node m (map (intelligent_player_mk_branch new_brd n') options)
                    end
         end
-      | _ => leaf
+      | _ => leaf (evaluate_macro_board new_brd)
   end.
   
 Definition intelligent_player_mk_tree (lm: list move)(brd: macro_board): node:=
   match lm with
-      | nil => leaf
+      | nil => leaf (evaluate_macro_board brd)
       | moves => mk_node first_move (map (intelligent_player_mk_branch brd 81) moves)
   end.
 
@@ -121,7 +120,7 @@ Definition DEBUG_intelligent_player_evaluate_tree (mtree: @node move): node:=
 
 Definition DEBUG_intelligent_player_evaluate_options (brd: macro_board) (options: list move): node :=
   match options with
-      | nil => leaf
+      | nil => leaf (evaluate_macro_board brd)
       | moves => DEBUG_intelligent_player_evaluate_tree (intelligent_player_mk_tree moves brd)
   end.
 
@@ -163,6 +162,7 @@ Definition intelligent_player (brd: macro_board) (last_mv: move): move :=
                         end
   end.
 
+(*
 Compute (DEBUG_intelligent_player_evaluate_options 
            empty_macro_board
            (map 
@@ -170,3 +170,4 @@ Compute (DEBUG_intelligent_player_evaluate_options
                                         | mk_position inner outer => mk_move outer inner X
                                     end)
               (intelligent_player_get_options_macro empty_macro_board))).
+*)
