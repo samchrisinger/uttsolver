@@ -13,11 +13,11 @@ Fixpoint flatten {X: Type} (l: list (list X)): list X:=
 
 Arguments flatten {X} _.
 
-Inductive node {T: Type}: Type:=  
+Inductive node {X: Type}: Type:=  
     | root: list node -> node
-    | mk_node: T -> list node -> node
+    | mk_node: X -> list node -> node
     | leaf: outcome -> node.
-Arguments node [T].
+Arguments node [X].
 
 Inductive micro_move: Set:= 
     | mk_micro_move: cell -> mark -> micro_move.
@@ -100,6 +100,7 @@ Fixpoint intelligent_player_mk_branch (brd: macro_board)(depth: nat)(m: move): n
             | nil => leaf (evaluate_macro_board new_brd)
             | _ => match depth with
                        | 0 => leaf (evaluate_macro_board new_brd)
+                       | 79 => leaf (evaluate_macro_board new_brd)
                        | S n' => mk_node m (map (intelligent_player_mk_branch new_brd n') options)
                    end
         end

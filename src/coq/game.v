@@ -3,7 +3,6 @@ Require Export Bool.
 Import ListNotations.
 Require Import types.
 
-
 Definition mark_board (brd: board)(mv: mark)(c: cell): board:=
   match brd with
     | mk_board
