@@ -61,8 +61,57 @@ Inductive safe: board -> Prop:=
 Theorem init_safe: safe empty_board.
 Proof.
 apply is_safe. exists (mk_mmove C00 X). intros. inversion H. destruct y. destruct m. simpl in H0.
-  inversion H0. simpl in H0. inversion H0. destruct c. simpl in H0. inversion H0. simpl.
+    inversion H0. simpl in H0. inversion H0. destruct c. simpl in H0. inversion H0. simpl.
 apply is_safe. exists (mk_mmove C11 X). intros. inversion H2. destruct y. destruct m.  
-    simpl in H3. inversion H3. inversion H3. destruct c. 
-  simpl in H0. inversion H0. destruct c. simpl.
+    simpl in H3. inversion H3. inversion H3. destruct c. inversion H4. inversion H4. simpl.
+apply is_safe. exists (mk_mmove C22 X). intros. inversion H5. destruct y. destruct m. inversion H6.
+    inversion H6. destruct c. inversion H7. inversion H7. inversion H7. simpl.
+apply done. compute. trivial. inversion H7. simpl in H7.
+apply done. trivial.
+apply done. trivial.
+apply done. trivial.
+apply done. trivial.
+apply is_safe. exists (mk_mmove C22 X). intros. inversion H5. destruct y. destruct m. inversion H6.
+    inversion H6. destruct c. inversion H7. inversion H7.
+apply done. trivial.
+apply done. trivial.
+apply done. trivial.
+apply done. trivial.
+apply done. trivial.
+apply done. trivial.
+apply done. trivial.
+apply done. trivial.
+apply is_safe. exists (mk_mmove C22 X). intros. inversion H5. destruct y. destruct m. inversion H6.
+    inversion H6. destruct c. inversion H7. inversion H7.
+apply done. trivial.
+apply done. trivial.
+apply done. trivial.
+apply done. trivial.
+apply done. trivial.
+apply done. trivial.
+apply done. trivial.
+apply is_safe. exists (mk_mmove C22 X). intros. inversion H5. destruct y. destruct m. inversion H6.
+    inversion H6. destruct c. inversion H7. inversion H7.
+apply done. trivial.
+apply done. trivial.
+apply done. trivial.
+apply done. trivial.
+apply done. trivial.
+apply done. trivial.
+apply done. trivial.
+
+apply is_safe. exists (mk_mmove C22 X). intros. inversion H5. destruct y. destruct m. inversion H6.
+    inversion H6. destruct c. inversion H7. inversion H7.
+apply done. trivial.
+apply done. trivial.
+apply done. trivial.
+apply done. trivial.
+apply done. trivial.
+apply done. trivial.
+apply done. trivial.
+repeat (apply is_safe; exists (mk_mmove C22 X); intros; inversion H5; destruct y; destruct m; inversion H6;
+    inversion H6; destruct c; inversion H7; inversion H7; repeat (apply done; trivial)).
+
+     simpl. simpl in H6. simpl in H7. simpl in H5. simpl in H4. simpl in H3. simpl in H2. simpl in H1. simpl in H0. simpl in H.
+
       
