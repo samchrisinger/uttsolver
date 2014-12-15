@@ -13,7 +13,13 @@ Definition apply_move_to_board (b: board) (m: mmove): board:=
   match m with
       | mk_mmove c mk => (mark_board b mk c)
   end.
-
+  
+Fixpoint count_mark (l: list mark) (equality: mark -> bool) : nat :=
+  match l with
+    | nil => 0
+    | h :: t => if equality h then (S (count_mark t equality)) else (count_mark t equality)
+  end.
+  
 Definition complete (bd: board): Prop:=
   match evaluate_board bd with
       | Xwins | tie => True
@@ -37,11 +43,7 @@ Definition valid_moves (m1 m2: mmove): Prop :=
       end
   end.
   
-Fixpoint count_mark (l: list mark) (equality: mark -> bool) : nat :=
-  match l with
-    | nil => 0
-    | h :: t => if equality h then (S (count_mark t equality)) else (count_mark t equality)
-  end.
+
   
 Definition valid_board_state (brd: board): Prop :=
   match brd with
@@ -55,63 +57,314 @@ Definition valid_board_state (brd: board): Prop :=
 
 Inductive safe: board -> Prop:=
   | is_safe: forall (bd: board),  (exists (x: mmove), forall (y: mmove), ((valid_moves x y) /\ (valid_board_state (apply_move_to_board (apply_move_to_board bd x) y))) ->
-  ((safe (apply_move_to_board (apply_move_to_board bd x) y)))) -> (safe bd)
+  ((safe (apply_move_to_board (apply_move_to_board bd x) y)) \/ (safe (apply_move_to_board bd x)))) -> (safe bd)
   | done: forall (bd: board), complete bd -> safe bd.
 
 Theorem init_safe: safe empty_board.
-Proof.
+Proof. (* X gets first move *)
 apply is_safe. exists (mk_mmove C00 X). intros. inversion H. destruct y. destruct m. simpl in H0.
-    inversion H0. simpl in H0. inversion H0. destruct c. simpl in H0. inversion H0. simpl.
+    inversion H0. simpl in H0. inversion H0. destruct c. simpl in H0. inversion H0. simpl in *.  left.
+(* Y goes in 01 *)
 apply is_safe. exists (mk_mmove C11 X). intros. inversion H2. destruct y. destruct m.  
-    simpl in H3. inversion H3. inversion H3. destruct c. inversion H4. inversion H4. simpl.
+    simpl in H3. inversion H3. inversion H3. destruct c. inversion H4. inversion H4. simpl in *. left.
 apply is_safe. exists (mk_mmove C22 X). intros. inversion H5. destruct y. destruct m. inversion H6.
-    inversion H6. destruct c. inversion H7. inversion H7. inversion H7. simpl.
-apply done. compute. trivial. inversion H7. simpl in H7.
-apply done. trivial.
-apply done. trivial.
-apply done. trivial.
-apply done. trivial.
+    inversion H6. destruct c. inversion H7. inversion H7. inversion H7. simpl.  left.
+apply done. compute. trivial.  inversion H7. simpl in H7. simpl in *. left.
+ apply done. trivial. left. 
+ apply done. trivial. left. 
+ apply done. trivial. left. 
+ apply done. trivial. left. 
 apply is_safe. exists (mk_mmove C22 X). intros. inversion H5. destruct y. destruct m. inversion H6.
-    inversion H6. destruct c. inversion H7. inversion H7.
-apply done. trivial.
-apply done. trivial.
-apply done. trivial.
-apply done. trivial.
-apply done. trivial.
-apply done. trivial.
-apply done. trivial.
-apply done. trivial.
+    inversion H6. destruct c. inversion H7. inversion H7. left.
+ apply done. trivial. left. 
+ apply done. trivial. left. 
+ apply done. trivial. left. 
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
 apply is_safe. exists (mk_mmove C22 X). intros. inversion H5. destruct y. destruct m. inversion H6.
-    inversion H6. destruct c. inversion H7. inversion H7.
-apply done. trivial.
-apply done. trivial.
-apply done. trivial.
-apply done. trivial.
-apply done. trivial.
-apply done. trivial.
-apply done. trivial.
+    inversion H6. destruct c. inversion H7. inversion H7. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
 apply is_safe. exists (mk_mmove C22 X). intros. inversion H5. destruct y. destruct m. inversion H6.
-    inversion H6. destruct c. inversion H7. inversion H7.
-apply done. trivial.
-apply done. trivial.
-apply done. trivial.
-apply done. trivial.
-apply done. trivial.
-apply done. trivial.
-apply done. trivial.
+    inversion H6. destruct c. inversion H7. inversion H7. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
 
 apply is_safe. exists (mk_mmove C22 X). intros. inversion H5. destruct y. destruct m. inversion H6.
-    inversion H6. destruct c. inversion H7. inversion H7.
-apply done. trivial.
-apply done. trivial.
-apply done. trivial.
-apply done. trivial.
-apply done. trivial.
-apply done. trivial.
-apply done. trivial.
-repeat (apply is_safe; exists (mk_mmove C22 X); intros; inversion H5; destruct y; destruct m; inversion H6;
-    inversion H6; destruct c; inversion H7; inversion H7; repeat (apply done; trivial)).
+    inversion H6. destruct c. inversion H7. inversion H7. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left. simpl in *.
 
-     simpl. simpl in H6. simpl in H7. simpl in H5. simpl in H4. simpl in H3. simpl in H2. simpl in H1. simpl in H0. simpl in H.
+apply is_safe. exists (mk_mmove C10 X). intros. inversion H5. destruct y. destruct m. inversion H6.
+    inversion H6. destruct c. inversion H7. inversion H7. simpl. left.
+apply is_safe. exists (mk_mmove C20 X). intros. inversion H8. destruct y. destruct m. inversion H9.
+    inversion H9. destruct c. inversion H10. inversion H10. simpl. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left. simpl in *.
+
+apply is_safe. exists (mk_mmove C20 X). intros. inversion H8. destruct y. destruct m. inversion H9.
+    inversion H9. destruct c. inversion H10. inversion H10. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left. simpl. simpl in *.
+
+apply is_safe. exists (mk_mmove C12 X). intros. inversion H8. destruct y. destruct m. inversion H9.
+    inversion H9. destruct c. inversion H10. inversion H10. simpl in *. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left. simpl in *.
+apply is_safe. exists (mk_mmove C12 X). intros. inversion H8. destruct y. destruct m. inversion H9.
+    inversion H9. destruct c. inversion H10. inversion H10. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left. simpl. simpl in *.
+apply is_safe. exists (mk_mmove C12 X). intros. inversion H8. destruct y. destruct m. inversion H9.
+    inversion H9. destruct c. inversion H10. inversion H10. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left. simpl in *. inversion H10. simpl in *. inversion H10. simpl in *. left.
+ 
+(* Y goes in 02 *)
+apply is_safe. exists (mk_mmove C11 X). intros. inversion H2. destruct y. destruct m.  
+    inversion H3. inversion H3. destruct c. inversion H4. simpl in *. left.
+apply is_safe. exists (mk_mmove C22 X). intros. inversion H5. destruct y. destruct m. inversion H6.
+    inversion H6. destruct c. inversion H7. inversion H7. inversion H7. simpl in *. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left. simpl in *.
+apply is_safe. exists (mk_mmove C22 X). intros. inversion H5. destruct y. destruct m. inversion H6.
+    inversion H6. destruct c. inversion H7. simpl in *. left.
+ apply done. trivial. left.
+simpl in *. inversion H7. inversion H7. inversion H7. simpl in *. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+
+apply is_safe. exists (mk_mmove C22 X). intros. inversion H5. destruct y. destruct m. inversion H6.
+    inversion H6. destruct c. inversion H7. inversion H7. left.
+ apply done. trivial. left. simpl in *. inversion H7. inversion H7. inversion H7. simpl in *. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+apply is_safe. exists (mk_mmove C22 X). intros. inversion H5. destruct y. destruct m. inversion H6.
+    inversion H6. destruct c. inversion H7. inversion H7. simpl in *. left.
+ apply done. trivial. left. simpl in *. inversion H7. inversion H7. inversion H7. simpl in *. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left. simpl in *.
+
+apply is_safe. exists (mk_mmove C22 X). intros. inversion H5. destruct y. destruct m. inversion H6.
+    inversion H6. destruct c. inversion H7. inversion H7. left.
+ apply done. trivial. left. inversion H7. inversion H7. inversion H7. simpl in *. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left. simpl in *.
+
+apply is_safe. exists (mk_mmove C10 X). intros. inversion H5. destruct y. destruct m. inversion H6.
+    inversion H6. destruct c. inversion H7. left.
+apply is_safe. exists (mk_mmove C20 X). intros. inversion H8. destruct y. destruct m. inversion H9.
+    inversion H9. destruct c. inversion H10. inversion H10. simpl. left.
+ apply done. trivial. left. inversion H10. inversion H10. simpl in *.  left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left. simpl in *.
+
+apply is_safe. exists (mk_mmove C20 X). intros. inversion H8. destruct y. destruct m. inversion H9.
+    inversion H9. destruct c. inversion H10. inversion H10. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left. simpl. simpl in *. inversion H10. simpl in *. left.
+
+apply is_safe. exists (mk_mmove C12 X). intros. inversion H8. destruct y. destruct m. inversion H9.
+    inversion H9. destruct c. inversion H10. inversion H10. simpl in *. left.
+ apply done. trivial. left. simpl in *. inversion H10. simpl in *. inversion H10. simpl in *. inversion H10. simpl in *. left.
+ inversion H10. simpl in *. inversion H10. simpl in *. left.
+ apply done. trivial. left.
+ apply done. trivial. left. simpl in *.
+apply is_safe. exists (mk_mmove C12 X). intros. inversion H8. destruct y. destruct m. inversion H9.
+    inversion H9. destruct c. inversion H10. inversion H10. simpl in *. left.
+ apply done. trivial. left. simpl in *. inversion H10. simpl in *. inversion H10. simpl in *. inversion H10. simpl in *. inversion H10. simpl in *.  left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left. simpl in *.
+ 
+(* Y goes in 10 *)
+
+apply is_safe. exists (mk_mmove C11 X). intros. inversion H2. destruct y. destruct m.  
+    inversion H3. inversion H3. destruct c. inversion H4. simpl in *. left.
+apply is_safe. exists (mk_mmove C22 X). intros. inversion H5. destruct y. destruct m. inversion H6.
+    inversion H6. destruct c. inversion H7. inversion H7. inversion H7. simpl in *. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left. simpl in *.
+apply is_safe. exists (mk_mmove C22 X). intros. inversion H5. destruct y. destruct m. inversion H6.
+    inversion H6. destruct c. inversion H7. simpl in *. left.
+ apply done. trivial. left.
+simpl in *. inversion H7. inversion H7. inversion H7. simpl in *. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left. simpl in *. inversion H4. simpl in *.  left.
+
+apply is_safe. exists (mk_mmove C22 X). intros. inversion H5. destruct y. destruct m. inversion H6.
+    inversion H6. destruct c. inversion H7. inversion H7. left.
+ apply done. trivial. left. simpl in *.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left. simpl in *. inversion H7. simpl in *. left.
+apply is_safe. exists (mk_mmove C22 X). intros. inversion H5. destruct y. destruct m. inversion H6.
+    inversion H6. destruct c. inversion H7. inversion H7. simpl in *. left.
+ apply done. trivial. left. simpl in *.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left. simpl in *. inversion H6. simpl in *. left.
+
+apply is_safe. exists (mk_mmove C22 X). intros. inversion H5. destruct y. destruct m. inversion H6.
+    inversion H6. destruct c. inversion H7. inversion H7. left.
+ apply done. trivial. left. inversion H7. inversion H7. inversion H7. simpl in *.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left. simpl in *. inversion H7. simpl in *. left.
+
+apply is_safe. exists (mk_mmove C01 X). intros. inversion H5. destruct y. destruct m. inversion H6.
+    inversion H6. destruct c. inversion H7. simpl in *. inversion H7. simpl in *. left.
+apply is_safe. exists (mk_mmove C12 X). intros. inversion H8. destruct y. destruct m. inversion H9.
+    inversion H9. destruct c. inversion H10. inversion H10. simpl in *. inversion H10. simpl in *. inversion H10. simpl in *. inversion H10. simpl in *. inversion H10. simpl in *. left.
+apply is_safe. exists (mk_mmove C21 X). intros. inversion H11. destruct y. destruct m.
+    inversion H12. inversion H12. destruct c. inversion H13. inversion H13. inversion H13. inversion H13. 
+    inversion H13. inversion H13. inversion H13. inversion H13. inversion H13.
+    simpl in *.  left.
+
+(* A complete board *)
+apply is_safe. exists (mk_mmove C21 X). intros. inversion H11. destruct y. destruct m.
+    inversion H12. inversion H12. destruct c. simpl in *. right.
+apply done. trivial. simpl in *. left.
+apply is_safe. exists (mk_mmove C20 X). intros. inversion H14. destruct y. destruct m. simpl in *.
+    inversion H15. inversion H15. destruct c. simpl in *. inversion H16. inversion H16. inversion H16.
+    inversion H16. inversion H16.  inversion H16.  inversion H16.  inversion H16.  inversion H16.
+    inversion H13.  inversion H13. simpl in *.  right.
+apply done. trivial. simpl in *. left.
+apply done. trivial. simpl in *. inversion H13. simpl in *. inversion H12. simpl in *. inversion H13.
+    simpl in *. inversion H10. simpl in *. inversion H7. inversion H7. simpl in *. left.
+    
+apply is_safe. exists (mk_mmove C21 X). intros. inversion H8. destruct y. destruct m. inversion H9.
+    inversion H9. destruct c. inversion H10. inversion H10. simpl in *. left.
+
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left.
+ apply done. trivial. left. simpl in *.
+
+apply is_safe. exists (mk_mmove C02 X). intros. inversion H8. destruct y. destruct m. inversion H9.
+    inversion H9. destruct c. inversion H10. inversion H10. simpl in *. left.
+apply done. trivial. left. simpl in *. inversion H10. simpl in *. inversion H10. simpl in *. left.
+apply done. trivial. left.
+apply done. trivial. left. simpl in *.
+apply done. trivial. left. simpl in *.
+apply done. trivial. left. simpl in *.
+apply is_safe. exists (mk_mmove C02 X). intros. inversion H8. destruct y. destruct m. inversion H9.
+    inversion H9. destruct c. inversion H10. inversion H10. simpl in *. left.
+apply done. trivial. left. simpl in *. inversion H10. simpl in *. inversion H10. simpl in *. left.
+apply done. trivial. left.
+apply done. trivial. left. simpl in *.
+apply done. trivial. left. simpl in *.
+apply done. trivial. left. simpl in *. inversion H7. simpl in *.
+
+(* Y goes in 11 *)
+
+(* Y goes in 12 *)
+
+(* Y goes in 20 *)
+
+(* Y goes in 21 *)
+
+(* Y goes in 22 *)
+
+
+
+
+
 
       
